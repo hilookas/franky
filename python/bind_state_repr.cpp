@@ -11,18 +11,57 @@ using namespace pybind11::literals;  // to bring in the '_a' literal
 using namespace franky;
 
 void bind_state_repr(py::module &m) {
-  py::class_<Affine>(m, "Affine")
+  py::class_<Affine, std::shared_ptr<Affine>>(m, "Affine")
       .def(
-          py::init<const Eigen::Matrix<double, 4, 4> &>(),
+          py::init([](const Eigen::Matrix<double, 4, 4> &transformation_matrix) {
+              auto ptr = std::allocate_shared<Affine>(Eigen::aligned_allocator<Affine>());
+              *ptr = Affine(transformation_matrix);
+              return ptr;
+          }),
           "transformation_matrix"_a = Eigen::Matrix<double, 4, 4>::Identity())
       .def(
-          py::init<>([](const Eigen::Vector3d &translation, const Eigen::Vector4d &quaternion) {
-            return Affine().fromPositionOrientationScale(
-                translation, Eigen::Quaterniond(quaternion), Eigen::Vector3d::Ones());
+          py::init([](const py::object &translation, const py::object &quaternion) {
+            Eigen::Vector3d t;
+            if (py::isinstance<py::sequence>(translation)) {
+                auto seq = translation.cast<py::sequence>();
+                if (seq.size() == 3) {
+                    t[0] = seq[0].cast<double>();
+                    t[1] = seq[1].cast<double>();
+                    t[2] = seq[2].cast<double>();
+                } else {
+                    t = translation.cast<Eigen::Vector3d>();
+                }
+            } else {
+                t = translation.cast<Eigen::Vector3d>();
+            }
+
+            Eigen::Vector4d q;
+            if (py::isinstance<py::sequence>(quaternion)) {
+                 auto seq = quaternion.cast<py::sequence>();
+                 if (seq.size() == 4) {
+                    q[0] = seq[0].cast<double>();
+                    q[1] = seq[1].cast<double>();
+                    q[2] = seq[2].cast<double>();
+                    q[3] = seq[3].cast<double>();
+                 } else {
+                    q = quaternion.cast<Eigen::Vector4d>();
+                 }
+            } else {
+                q = quaternion.cast<Eigen::Vector4d>();
+            }
+
+            auto ptr = std::allocate_shared<Affine>(Eigen::aligned_allocator<Affine>());
+            *ptr = Affine().fromPositionOrientationScale(
+                t, Eigen::Quaterniond(q), Eigen::Vector3d::Ones());
+            return ptr;
           }),
           "translation"_a = Eigen::Vector3d{0, 0, 0},
           "quaternion"_a = Eigen::Vector4d{0, 0, 0, 1})
-      .def(py::init<const Affine &>())  // Copy constructor
+      .def(py::init([](const Affine &other) {
+           auto ptr = std::allocate_shared<Affine>(Eigen::aligned_allocator<Affine>());
+           *ptr = other;
+           return ptr;
+       }))  // Copy constructor
       .def(py::self * py::self)
       .def_property_readonly("inverse", [](const Affine &affine) { return affine.inverse(); })
       .def_property_readonly("translation", [](const Affine &affine) { return affine.translation(); })

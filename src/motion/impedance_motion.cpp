@@ -10,8 +10,8 @@
 
 namespace franky {
 
-ImpedanceMotion::ImpedanceMotion(Affine target, const ImpedanceMotion::Params &params)
-    : target_(std::move(target)), params_(params), Motion<franka::Torques>() {
+ImpedanceMotion::ImpedanceMotion(const Affine &target, const ImpedanceMotion::Params &params)
+    : target_(target), params_(params), Motion<franka::Torques>() {
   stiffness.setZero();
   stiffness.topLeftCorner(3, 3) << params.translational_stiffness * Eigen::MatrixXd::Identity(3, 3);
   stiffness.bottomRightCorner(3, 3) << params.rotational_stiffness * Eigen::MatrixXd::Identity(3, 3);

@@ -22,14 +22,15 @@ void bind_motion_torque(py::module &m) {
                             force_constraints,
                         double exponential_decay = 0.005) {
             Eigen::Vector<bool, 6> force_constraints_active = Eigen::Vector<bool, 6>::Zero();
-            Eigen::Vector<double, 6> force_constraints_value;
+            Eigen::Vector<double, 6> force_constraints_value = Eigen::Vector<double, 6>::Zero();
             if (force_constraints.has_value()) {
               for (int i = 0; i < 6; i++) {
                 force_constraints_value[i] = force_constraints.value()[i].value_or(NAN);
                 force_constraints_active[i] = force_constraints.value()[i].has_value();
               }
             }
-            return std::make_shared<ExponentialImpedanceMotion>(
+            return std::allocate_shared<ExponentialImpedanceMotion>(
+                Eigen::aligned_allocator<ExponentialImpedanceMotion>(),
                 target,
                 ExponentialImpedanceMotion::Params{
                     target_type,
@@ -59,14 +60,15 @@ void bind_motion_torque(py::module &m) {
                         bool return_when_finished,
                         double finish_wait_factor) {
             Eigen::Vector<bool, 6> force_constraints_active = Eigen::Vector<bool, 6>::Zero();
-            Eigen::Vector<double, 6> force_constraints_value;
+            Eigen::Vector<double, 6> force_constraints_value = Eigen::Vector<double, 6>::Zero();
             if (force_constraints.has_value()) {
               for (int i = 0; i < 6; i++) {
                 force_constraints_value[i] = force_constraints.value()[i].value_or(NAN);
                 force_constraints_active[i] = force_constraints.value()[i].has_value();
               }
             }
-            return std::make_shared<CartesianImpedanceMotion>(
+            return std::allocate_shared<CartesianImpedanceMotion>(
+                Eigen::aligned_allocator<CartesianImpedanceMotion>(),
                 target,
                 duration,
                 CartesianImpedanceMotion::Params{

@@ -20,6 +20,8 @@ namespace franky {
  */
 class ImpedanceMotion : public Motion<franka::Torques> {
  public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   /**
    * @brief Parameters for the impedance motion.
    */
@@ -44,7 +46,7 @@ class ImpedanceMotion : public Motion<franka::Torques> {
    * @param target The target pose.
    * @param params Parameters for the motion.
    */
-  explicit ImpedanceMotion(Affine target, const Params &params);
+  explicit ImpedanceMotion(const Affine &target, const Params &params);
 
  protected:
   void initImpl(const RobotState &robot_state, const std::optional<franka::Torques> &previous_command) override;
@@ -63,11 +65,10 @@ class ImpedanceMotion : public Motion<franka::Torques> {
  private:
   Affine absolute_target_;
   Affine target_;
-  Params params_;
-
-  Eigen::Matrix<double, 6, 6> stiffness, damping;
   Affine intermediate_target_;
+  Eigen::Matrix<double, 6, 6> stiffness, damping;
 
+  Params params_;
   std::unique_ptr<franka::Model> model_;
 };
 
